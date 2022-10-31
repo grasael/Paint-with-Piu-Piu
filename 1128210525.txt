@@ -1,0 +1,385 @@
+from cmu_112_graphics import *
+import math
+
+##########################################
+# Home Page Screen Mode
+##########################################
+
+def newPaintingButton(app, canvas):
+    font = 'Times 15'
+    canvas.create_rectangle(app.width//2 -  100, 250, app.width//2 + 100, 300)
+    canvas.create_text(app.width//2, 275, text='new painting', font=font)
+
+def homePageScreenMode_redrawAll(app, canvas):
+    fontMain = 'Times 25 bold'
+    fontSub = 'Times 15'
+    canvas.create_text(app.width//2, 10, 
+        text='🎕 ┈┈┈┈ 🎕 ┈┈┈┈ 🎕 ┈┈┈┈ 🎕 ┈┈┈┈ 🎕 ┈┈┈┈ 🎕', font=fontSub)
+    canvas.create_text(app.width//2, app.height - 10, 
+        text='🎕 ┈┈┈┈ 🎕 ┈┈┈┈ 🎕 ┈┈┈┈ 🎕 ┈┈┈┈ 🎕 ┈┈┈┈ 🎕', font=fontSub)
+    canvas.create_text(app.width//2, 325, text='·̩̩̥͙＊*•̩̩͙✩•̩̩͙*˚　　˚*•̩̩͙✩•̩̩͙*˚＊·̩̩̥͙', font=fontSub)
+    canvas.create_text(app.width//2, 100, text='❀⑅*❀⑅*❀', font=fontSub)
+    canvas.create_text(app.width//2, 415, text='❀⑅*❀⑅*❀', font=fontSub)
+    canvas.create_text(app.width//2, 175, text='*＊✿❀ welcome to paint ❀✿＊*', font=fontMain)
+    newPaintingButton(app, canvas)
+
+def homePageScreenMode_mousePressed(app, event):
+    app.coordinates.append((event.x, event.y))
+    if((app.width//2 - 100 <= event.x and event.x <= app.width//2 + 100) and 
+                                        (250 <= event.y and event.y <= 300)):
+        print("clicked new painting button")
+        app.mode = 'paintMode'
+    
+##########################################
+# Paint Mode
+##########################################
+
+#drawing buttons for each tool
+def drawPencilButton(app, canvas):
+    canvas.create_rectangle(25, 25, 75, 75)
+
+def drawCircleButton(app, canvas):
+    canvas.create_rectangle(25, 75, 75, 125)
+    canvas.create_text(50, 100, text='circle')
+
+def drawOvalButton(app, canvas):
+    canvas.create_rectangle(25, 125, 75, 175)
+    canvas.create_text(50, 150, text='oval')
+
+def drawTriangleButton(app, canvas):
+    canvas.create_rectangle(25, 175, 75, 225)
+    canvas.create_text(50, 200, text='triangle')
+
+def drawStraightLineButton(app, canvas):
+    canvas.create_rectangle(25, 225, 75, 275)
+    canvas.create_text(50, 250, text='straight\nline')
+
+def drawEraseButton(app, canvas):
+    canvas.create_rectangle(25, 275, 75, 325)
+    canvas.create_text(50, 300, text='erase')
+
+def drawColorPalette(app, canvas):
+    canvas.create_rectangle(50, app.height - 60, 100, app.height - 10, fill="white")
+    canvas.create_rectangle(100, app.height - 60, 150, app.height - 10, fill='red')
+    canvas.create_rectangle(150, app.height - 60, 200, app.height - 10, fill='pink')
+    canvas.create_rectangle(200, app.height - 60, 250, app.height - 10, fill='orange')
+    canvas.create_rectangle(250, app.height - 60, 300, app.height - 10, fill='yellow')
+    canvas.create_rectangle(300, app.height - 60, 350, app.height - 10, fill='green')
+    canvas.create_rectangle(350, app.height - 60, 400, app.height - 10, fill='blue')
+    canvas.create_rectangle(400, app.height - 60, 450, app.height - 10, fill='purple')
+    canvas.create_rectangle(450, app.height - 60, 500, app.height - 10, fill='brown')
+    canvas.create_rectangle(500, app.height - 60, 550, app.height - 10, fill='black')
+
+def drawSaveButton(app, canvas):
+    canvas.create_rectangle(25, 325, 75, 375)
+    canvas.create_text(50, 350, text='save')
+
+def drawPaintBucketButton(app, canvas):
+    canvas.create_rectangle(25, 375, 75, 425)
+    canvas.create_text(50, 400, text='bucket')
+
+#mouse functions
+def paintMode_mousePressed(app, event):
+    app.coordinates.append((event.x, event.y))
+    if(25 <= event.x <= 75) and (25 <= event.y <= 75):
+        app.tool = 'draw'
+        app.isDrawing = True
+    if(25 <= event.x <= 75) and (75 <= event.y <= 125):
+        app.tool = 'circle'
+        app.isCircle = True
+    if(25 <= event.x <= 75) and (125 <= event.y <= 175):
+        app.tool = 'oval'
+        app.isOval = True
+    if(25 <= event.x <= 75) and (175 <= event.y <= 225):
+        app.tool = 'triangle'
+        app.isTriangle = True
+    if(25 <= event.x <= 75) and (225 <= event.y <= 275):
+        app.tool = 'straight line'
+        app.isStraightLine = True
+    if(25 <= event.x <= 75) and (275 <= event.y <= 325):
+        app.tool = 'erase'
+        app.isErase = True
+    if(25 <= event.x <= 75) and (325 <= event.y <= 375):
+        app.saveSnapshot()
+    if(25 <= event.x <= 75) and (375 <= event.y <= 425):
+        app.tool = 'paint bucket'
+        app.isPaintBucket = True
+        
+    if(app.tool == 'paint bucket'):
+        if(len(app.pbCoord) >= 1):
+            r,g,b =app.getpixel((event.x,event.y))
+            app.pbCoord[-1].append((event.x, event.y), (r,g,b))
+    
+    for i in range(50, 550, 50):
+        if((i <= event.x and event.x <= i + 50) and 
+                    (app.height - 60 <= event.y and event.y <= app.height - 10)):
+            app.colorIndex = i//50 - 1
+            app.color = app.colorList[app.colorIndex]
+            print(app.color)
+
+def paintMode_mouseDragged(app, event):
+    if(app.tool == 'draw'):
+        if(len(app.drawCoord) == 0):
+            app.drawCoord.append([])
+            app.drawCoord[0].append((event.x, event.y))
+        elif(len(app.drawCoord) >= 1):
+            app.drawCoord[-2].append((event.x, event.y))
+        print(app.drawCoord)
+    if(app.tool == 'circle'):
+        if(len(app.circleCoord) == 0):
+            app.circleCoord.append([])
+            app.circleCoord[0].append((event.x, event.y))
+        elif(len(app.circleCoord) >= 1):
+            app.circleCoord[-2].append((event.x, event.y))
+        print(app.circleCoord)
+    if(app.tool == 'oval'):
+        if(len(app.ovalCoord) == 0):
+            app.ovalCoord.append([])
+            app.ovalCoord[0].append((event.x, event.y))
+        elif(len(app.ovalCoord) >= 1):
+            app.ovalCoord[-2].append((event.x, event.y))
+        print(app.ovalCoord)
+    if(app.tool == 'triangle'):
+        if(len(app.triCoord) == 0):
+            app.triCoord.append([])
+            app.triCoord[0].append((event.x, event.y))
+        elif(len(app.triCoord) >= 1):
+            app.triCoord[-2].append((event.x, event.y))
+        print('triCoord:', app.triCoord)
+    if(app.tool == 'straight line'):
+        if(len(app.lineCoord) == 0):
+            app.lineCoord.append([])
+            app.lineCoord[0].append((event.x, event.y))
+        elif(len(app.lineCoord) >= 1):
+            app.lineCoord[-2].append((event.x, event.y))
+    if(app.tool == 'erase'):
+        if(len(app.eraseList) == 0):
+            app.eraseList.append([])
+            app.eraseList[0].append((event.x, event.y))
+        elif(len(app.eraseList) >= 1):
+            app.eraseList[-1].append((event.x, event.y))
+
+def paintMode_mouseReleased(app, event):
+    if(app.tool == 'draw'):
+        app.drawCoord[-1].append(app.color)
+        app.drawCoord.append([])
+        print(app.drawCoord)
+    if(app.tool == 'circle'):
+        app.circleCoord[-1].append(app.color)
+        app.circleCoord.append([])
+        app.circleI += 1
+        print(app.circleCoord)
+    if(app.tool == 'oval'):
+        app.ovalCoord[-1].append(app.color)
+        app.ovalCoord.append([])
+        app.ovalI += 1
+    if(app.tool == 'triangle'):
+        app.triCoord[-1].append(app.color)
+        app.triCoord.append([])
+        app.triI += 1
+        if(len(app.triCoord[app.triI-2])> 1):
+            calculateTriangleCoord(app, app.triI-2)
+        print('triList', app.triList)
+    if(app.tool == 'straight line'):
+        app.lineCoord[-1].append(app.color)
+        app.lineCoord.append([])
+        app.lineI += 1
+    if(app.tool == 'erase'):
+        app.eraseList.append([])
+    if(app.tool == 'paint bucket'):
+        app.pbCoord[-1].append(app.color)
+        app.pbCoord.append([])
+        app.pbI += 1
+        print(app.pbCoord)
+
+#tool functions
+def draw(app, canvas):
+    if(app.isDrawing):
+        for i in range(len(app.drawCoord)):
+            for j in range(1, len(app.drawCoord[i])-1):
+                canvas.create_line(app.drawCoord[i][j][0], app.drawCoord[i][j][1], 
+                            app.drawCoord[i][j+1][0], app.drawCoord[i][j+1][1], fill = app.drawCoord[i][0])
+
+def erase(app, canvas):
+    if(app.isErase):
+        for i in range(len(app.eraseList)):
+            for j in range(len(app.eraseList[i])-1):
+                canvas.create_line(app.eraseList[i][j][0], app.eraseList[i][j][1], 
+                            app.eraseList[i][j+1][0], app.eraseList[i][j+1][1], fill='white')    
+
+def circleRadius(app, i):
+    if(len(app.circleCoord[i]) > 1):
+        x1 = app.circleCoord[i][1][0]
+        y1 = app.circleCoord[i][1][1]
+        x2 = app.circleCoord[i][-1][0]
+        y2 = app.circleCoord[i][-1][1]
+        radius = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+        return radius
+
+def circle(app, canvas):
+    if(app.isCircle):
+        for i in range(0, app.circleI):
+            if(len(app.circleCoord[i]) > 1):
+                canvas.create_oval(app.circleCoord[i][1][0]-circleRadius(app, i), 
+                        app.circleCoord[i][1][1]+circleRadius(app, i), 
+                        app.circleCoord[i][1][0]+circleRadius(app, i),
+                        app.circleCoord[i][1][1]-circleRadius(app, i), outline = app.circleCoord[i][0])
+
+def ovalRadius(app, i):
+    if(len(app.ovalCoord[i]) > 1):
+        x1 = app.ovalCoord[i][1][0]
+        y1 = app.ovalCoord[i][1][1]
+        x2 = app.ovalCoord[i][-1][0]
+        y2 = app.ovalCoord[i][-1][1]
+        radius = math.sqrt((x2 - x1)**2 + (y2 - y1)**2)
+        return radius
+
+def oval(app, canvas):
+    if(app.isOval):
+        for i in range(0, app.ovalI):
+            if(len(app.ovalCoord[i]) > 1):
+                canvas.create_oval(app.ovalCoord[i][1][0]-ovalRadius(app, i), 
+                            app.ovalCoord[i][1][1]+ovalRadius(app, i)//2, 
+                            app.ovalCoord[i][1][0]+ovalRadius(app, i),
+                            app.ovalCoord[i][1][1]-ovalRadius(app, i), outline = app.ovalCoord[i][0])
+
+def calculateTriangleCoord(app, i):
+    if(len(app.triCoord) > 1):
+        firstClickX = app.triCoord[i][1][0]
+        firstClickY = app.triCoord[i][1][1]
+        lastClickX = app.triCoord[i][-2][0]
+        lastClickY = app.triCoord[i][-2][1]
+        topX = firstClickX + (firstClickX - lastClickX)//2
+        topY = firstClickY
+        bottomLeftX = lastClickX
+        bottomLeftY = firstClickY + (firstClickY - lastClickY) // 2
+        bottomRightX = lastClickX
+        bottomRightY = lastClickY
+        app.triList.append((app.triCoord[i][0], topX, topY, bottomLeftX, bottomLeftY, bottomRightX,
+                             bottomRightY))
+    print(app.triCoord)
+
+def triangle(app, canvas):
+    if(app.isTriangle):
+        for i in range(0, len(app.triList)):
+            if(len(app.triList[i]) > 1):
+                canvas.create_polygon(app.triList[i][1], app.triList[i][2],
+                    app.triList[i][3], app.triList[i][4], app.triList[i][5],
+                    app.triList[i][6], fill="", outline = app.triList[i][0], width = 1)
+    
+def straightLine(app, canvas):
+    for i in range(0, app.lineI):
+        if(len(app.lineCoord[i]) > 1):
+            canvas.create_line(app.lineCoord[i][1][0], app.lineCoord[i][1][1], 
+                                app.lineCoord[i][-1][0], app.lineCoord[i][-1][1],
+                                fill = app.lineCoord[i][0], width = 2)
+
+def paintBucket(app, canvas):
+    if(app.isPaintBucket):
+        #print("1:", app.pbI)
+        #print("2:", len(app.pbCoord[app.pbI]))
+        #print("3:", app.pbCoord)
+        if(len(app.pbCoord[app.pbI-1]) > 1):
+            newColor = app.pbCoord[app.pbI-1][-1]
+            if(newColor == 'white'):
+                newRGB = app.colorRGBList[0]
+            if(newColor == 'red'):
+                newRGB = app.colorRGBList[1]
+            if(newColor == 'pink'):
+                newRGB = app.colorRGBList[2]
+            if(newColor == 'orange'):
+                newRGB = app.colorRGBList[3]
+            if(newColor == 'yellow'):
+                newRGB = app.colorRGBList[4]
+            if(newColor == 'green'):
+                newRGB = app.colorRGBList[5]
+            if(newColor == 'blue'):
+                newRGB = app.colorRGBList[6]
+            if(newColor == 'purple'):
+                newRGB = app.colorRGBList[7]
+            if(newColor == 'brown'):
+                newRGB = app.colorRGBList[8]
+            if(newColor == 'black'):
+                newRGB = app.colorRGBList[9]
+            oldColor = (0, 0, 0)         
+
+def paintMode_redrawAll(app, canvas):
+    font = 'Times 20 bold'
+    canvas.create_text(app.width//2, 20, text="paint screen")
+    canvas.create_text(app.width//2, 50, text="click on color first!", font=font)
+    canvas.create_image(50, 50, image=ImageTk.PhotoImage(app.image2))
+    drawPencilButton(app, canvas)
+    drawCircleButton(app, canvas)
+    drawOvalButton(app, canvas)
+    drawTriangleButton(app, canvas)
+    drawStraightLineButton(app, canvas)
+    drawColorPalette(app, canvas)
+    drawEraseButton(app, canvas)
+    drawSaveButton(app, canvas)
+    drawPaintBucketButton(app, canvas)
+
+    draw(app, canvas)
+    circle(app, canvas)
+    oval(app, canvas)
+    triangle(app, canvas)
+    straightLine(app, canvas)
+    erase(app, canvas)
+    paintBucket(app, canvas)
+
+    if (app.image != None):
+        canvas.create_image(525, 300, image=ImageTk.PhotoImage(app.image))
+    
+##########################################
+# Main App
+##########################################
+
+def appStarted(app):
+    app.mode = 'homePageScreenMode'
+    app.coordinates = []
+    app.drawCoord = [[]]
+    #from https://svgheart.com/product/pencil-black-and-white-clipart-free-svg-file/
+    app.image1 = app.loadImage('pencil-download_adobespark.png')
+    app.image2 = app.scaleImage(app.image1, 1/20)
+    app.colorList = ['white', 'red', 'pink', 'orange', 'yellow', 'green', 'blue',
+                    'purple', 'brown', 'black']
+    app.colorRGBList = [(255, 255, 255), (254, 0, 0), (255, 192, 203), (254, 164, 0), 
+        (254, 250, 29), (0, 128, 1), (0, 0, 254), (129, 0, 127), (0, 0, 0)]
+    app.colorIndex = 0
+    app.color = app.colorList[app.colorIndex]
+    app.tool = ''
+    #circle 
+    app.circleCoord = [[]]
+    app.circleRadius = 0
+    app.circleI = 0
+    #oval
+    app.ovalCoord = [[]]
+    app.ovalRadius = 0
+    app.ovalI = 0
+    #triangle
+    app.triCoord = [[]]
+    app.triList = []
+    app.triRadius = 0
+    app.triI = 0
+    #straightLine
+    app.lineCoord = [[]]
+    app.lineI = 0
+    #a bunch of booleans for tools
+    app.isDrawing = False
+    app.isCircle = False
+    app.isOval = False
+    app.isTriangle = False
+    app.isStraightLine = False
+    app.isErase = False
+    app.isSave = True
+    app.isPaintBucket = False
+    #erase
+    app.eraseList = []
+    #save
+    app.image = None
+    #paint bucket
+    app.pbCoord = [[]]
+    app.pbI = 0
+    app.pbX = 0
+    app.pbY = 0
+
+runApp(width=600, height=500)
